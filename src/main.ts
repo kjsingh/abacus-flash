@@ -48,6 +48,7 @@ const nextNumberButton = document.getElementById('next-number')!;
 const showAnswerButton = document.getElementById('show-answer')!;
 const submitGuessButton = document.getElementById('submit-guess')!;
 const restartButton = document.getElementById('restart')!;
+const backToModeButton = document.getElementById('back-to-mode')!;
 const currentNumberElement = document.getElementById('current-number')!;
 const roundNumberElement = document.getElementById('round-number')!;
 const roundProgressElement = document.getElementById('round-progress')!;
@@ -64,16 +65,25 @@ nextNumberButton.addEventListener('click', showNextNumber);
 showAnswerButton.addEventListener('click', showAnswer);
 submitGuessButton.addEventListener('click', submitGuess);
 restartButton.addEventListener('click', restartApp);
+backToModeButton.addEventListener('click', backToModeSelection);
+guessInputElement.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') submitGuess();
+});
 
 // Start the app in mode selection
 window.addEventListener("DOMContentLoaded", () => {
-  modeSelection.style.display = 'block';
+  modeSelection.style.display = 'flex';
 });
 
 function startMode(_mode: string) {
   appState.mode = 'settings';
   modeSelection.style.display = 'none';
-  settingsScreen.style.display = 'block';
+  settingsScreen.style.display = 'flex';
+}
+
+function backToModeSelection() {
+  settingsScreen.style.display = 'none';
+  modeSelection.style.display = 'flex';
 }
 
 function startPractice() {
@@ -87,7 +97,7 @@ function startPractice() {
   
   appState.mode = 'practice';
   settingsScreen.style.display = 'none';
-  practiceScreen.style.display = 'block';
+  practiceScreen.style.display = 'flex';
   appState.currentRound = 0;
   appState.correctAnswers = 0;
   startRound();
@@ -95,6 +105,10 @@ function startPractice() {
 
 function startRound() {
   appState.currentRound++;
+  practiceScreen.style.display = 'flex';
+  guessScreen.style.display = 'none';
+  nextNumberButton.style.display = 'inline-block';
+  showAnswerButton.style.display = 'none';
   appState.currentNumberIndex = 0;
   appState.practiceNumbers = generateNumbers();
   appState.correctAnswer = appState.practiceNumbers.reduce((sum, num) => sum + num, 0);
@@ -187,7 +201,7 @@ function showAnswer() {
   }
   
   practiceScreen.style.display = 'none';
-  guessScreen.style.display = 'block';
+  guessScreen.style.display = 'flex';
   if (guessInputElement) {
     guessInputElement.focus();
   }
@@ -205,7 +219,7 @@ function submitGuess() {
       }
     } else {
       if (guessFeedbackElement) {
-        guessFeedbackElement.textContent = `Incorrect. The answer was ${appState.correctAnswer}`;
+        guessFeedbackElement.textContent = `Incorrect. The answer was ${appState.correctAnswer.toFixed(2)}`;
         guessFeedbackElement.style.color = 'red';
       }
     }
@@ -213,11 +227,20 @@ function submitGuess() {
     // Go to next round or show results
     if (appState.currentRound < appState.rounds) {
       setTimeout(() => {
+        guessInputElement.value = '';
+        guessFeedbackElement.textContent = '';
         guessScreen.style.display = 'none';
         startRound();
       }, 2000);
     } else {
-      showResults();
+      setTimeout(() => {
+        showResults();
+      }, 2000);
+    }
+  } else if (guessInputElement && !guessInputElement.value) {
+    if (guessFeedbackElement) {
+      guessFeedbackElement.textContent = 'Please enter a number';
+      guessFeedbackElement.style.color = 'orange';
     }
   }
 }
@@ -242,10 +265,16 @@ function showResults() {
   }
   
   guessScreen.style.display = 'none';
-  resultsScreen.style.display = 'block';
+  resultsScreen.style.display = 'flex';
 }
 
 function restartApp() {
+  if (appState.timer) clearTimeout(appState.timer);
+  settingsScreen.style.display = 'none';
+  practiceScreen.style.display = 'none';
+  guessScreen.style.display = 'none';
+  resultsScreen.style.display = 'none';
+  modeSelection.style.display = 'flex';
   appState = {
     mode: 'select',
     currentRound: 0,
@@ -264,7 +293,4 @@ function restartApp() {
     currentNumberIndex: 0,
     timer: null
   };
-  
-  resultsScreen.style.display = 'none';
-  modeSelection.style.display = 'block';
 }
