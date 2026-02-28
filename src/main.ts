@@ -16,6 +16,7 @@ let appState: {
   practiceNumbers: number[];
   currentNumberIndex: number;
   timer: any;
+  practiceMode: 'flash' | 'listening';
 } = {
   mode: 'select',
   currentRound: 0,
@@ -32,7 +33,8 @@ let appState: {
   displayTime: 1,
   practiceNumbers: [],
   currentNumberIndex: 0,
-  timer: null
+    timer: null,
+    practiceMode: 'flash'
 };
 
 // UI Elements
@@ -75,10 +77,17 @@ window.addEventListener("DOMContentLoaded", () => {
   modeSelection.style.display = 'flex';
 });
 
-function startMode(_mode: string) {
+function startMode(mode: 'flash' | 'listening') {
+  appState.practiceMode = mode;
   appState.mode = 'settings';
   modeSelection.style.display = 'none';
   settingsScreen.style.display = 'flex';
+
+  // Hide display time setting for listening mode (speech timing is automatic)
+  const displayTimeSetting = document.getElementById('display-time')?.closest('.setting-row');
+  if (displayTimeSetting) {
+    (displayTimeSetting as HTMLElement).style.display = mode === 'listening' ? 'none' : '';
+  }
 }
 
 function backToModeSelection() {
@@ -165,34 +174,64 @@ function updateRoundInfo() {
   }
 }
 
+function speakNumber(num: number): Promise<void> {
+  return new Promise((resolve) => {
+    const utterance = new SpeechSynthesisUtterance(num.toString());
+    utterance.rate = 0.9;
+    utterance.onend = () => resolve();
+    utterance.onerror = () => resolve();
+    window.speechSynthesis.speak(utterance);
+  });
+}
+
 function showNextNumber() {
   if (appState.currentNumberIndex >= appState.practiceNumbers.length) {
-    // All numbers shown, show answer button
+    // All numbers shown/spoken, show answer button
     showAnswerButton.style.display = 'inline-block';
     nextNumberButton.style.display = 'none';
-    return;
-  }
-  
-  if (currentNumberElement) {
-    currentNumberElement.textContent = appState.practiceNumbers[appState.currentNumberIndex].toString();
-    currentNumberElement.style.display = 'block';
-  }
-  
-  const displayTime = appState.displayTime * 1000; // Convert to milliseconds
-  
-  // Clear existing timer
-  if (appState.timer) {
-    clearTimeout(appState.timer);
-  }
-  
-  // Set timer to hide the number and show next
-  appState.timer = setTimeout(() => {
     if (currentNumberElement) {
       currentNumberElement.style.display = 'none';
     }
-    appState.currentNumberIndex++;
-    showNextNumber();
-  }, displayTime);
+    return;
+  }
+
+  const currentNum = appState.practiceNumbers[appState.currentNumberIndex];
+
+  if (appState.practiceMode === 'listening') {
+    // Listening mode: speak the number, don't display it
+    if (currentNumberElement) {
+      currentNumberElement.textContent = '🔊';
+      currentNumberElement.style.display = 'block';
+    }
+    nextNumberButton.style.display = 'none';
+    speakNumber(currentNum).then(() => {
+      appState.currentNumberIndex++;
+      // Brief pause between numbers
+      appState.timer = setTimeout(() => {
+        showNextNumber();
+      }, 500);
+    });
+  } else {
+    // Flash mode: display the number visually
+    if (currentNumberElement) {
+      currentNumberElement.textContent = currentNum.toString();
+      currentNumberElement.style.display = 'block';
+    }
+
+    const displayTime = appState.displayTime * 1000;
+
+    if (appState.timer) {
+      clearTimeout(appState.timer);
+    }
+
+    appState.timer = setTimeout(() => {
+      if (currentNumberElement) {
+        currentNumberElement.style.display = 'none';
+      }
+      appState.currentNumberIndex++;
+      showNextNumber();
+    }, displayTime);
+  }
 }
 
 function showAnswer() {
@@ -291,6 +330,7 @@ function restartApp() {
     displayTime: 1,
     practiceNumbers: [],
     currentNumberIndex: 0,
-    timer: null
+    timer: null,
+    practiceMode: 'flash'
   };
 }

@@ -1,0 +1,25 @@
+- main [ref=e2]:
+  - heading "Math Practice App" [level=1] [ref=e3]
+  - generic [ref=e9]:
+    - heading "Settings" [level=2] [ref=e10]
+    - generic [ref=e11]:
+      - generic [ref=e12]: "Number of Rounds:"
+      - combobox "Number of Rounds:" [ref=e13]:
+        - option "10"
+        - option "20" [selected]
+    - generic [ref=e14]:
+      - generic [ref=e15]: "Numbers per Round (5-10):"
+      - spinbutton "Numbers per Round (5-10):" [ref=e16]: "5"
+    - generic [ref=e17]:
+      - generic [ref=e18]: "Digits per Number (1-3):"
+      - spinbutton "Digits per Number (1-3):" [ref=e19]: "2"
+    - generic [ref=e21]:
+      - checkbox "Allow Negative Numbers" [checked] [ref=e22]
+      - text: Allow Negative Numbers
+    - generic [ref=e24]:
+      - checkbox "Allow Decimals" [checked] [ref=e25]
+      - text: Allow Decimals
+    - generic [ref=e26]:
+      - generic [ref=e27]: "Display Time (0.5-2s):"
+      - spinbutton "Display Time (0.5-2s):" [ref=e28]: "1"
+    - button "Start Practice" [ref=e29] [cursor=pointer]
